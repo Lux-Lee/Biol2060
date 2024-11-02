@@ -1,0 +1,131 @@
+---
+title: "Tutorial 4 Assignment: Data Collection and Visualization"
+author: "Alyssa Morgane Nanette, Elliotte Ralston, Lusia Lee, Sophia Hayward"
+date: "2024-11-03"
+output: pdf_document
+---
+
+```{r, include=FALSE}
+library(knitr)
+library(dplyr)                          
+library(openxlsx)                      
+library(nnet) 
+library(readxl)
+library(ggplot2)
+library(kableExtra)
+
+```
+
+### Part A: Data Collection (2 marks)
+
+Your group will be given data collection sheets, fill it out and hand it in when the experiment is complete.
+
+```{r, echo=FALSE}
+snail <- read_excel("C:/Users/95joo/Desktop/snail.xlsx")
+snail.data <- data.frame(snail[2], snail[7])
+snail_w <- snail.data %>%                         
+  mutate(
+    Temperature = factor(Temperature))
+names(snail_w)[2] <- "Food intake per weight (g)"
+Temperature14 <- subset(snail_w, Temperature == "14")
+Temperature28 <- subset(snail_w, Temperature == "28")
+rownames(Temperature14) <- NULL
+rownames(Temperature28) <- NULL
+```
+```{r, echo=FALSE}
+kable(snail, align = "c", caption = "Section 7 Data set") %>%
+  kable_styling(latex_options = "HOLD_position") %>%
+  column_spec(column=1:7, width="0.6in")
+```
+
+
+### Part B: Data Visualization (13 marks)
+1. 	From the class dataset, calculate the mean and standard errors for the amount food consumed by weight by the snails. Paste your table of means and standard errors below. (1 mark)
+```{r, echo=FALSE}
+kable(Temperature14, align = "c", caption = "Data for Temperature 14°C") %>%
+  kable_styling(latex_options = "HOLD_position")
+```
+\newpage
+```{r, echo=FALSE}
+kable(Temperature28, align = "c", caption = "Data for Temperature 28°C") %>%
+  kable_styling(latex_options = "HOLD_position")
+```
+
+```{r}
+mean(Temperature14$`Food intake per weight (g)`)
+mean(Temperature28$`Food intake per weight (g)`)
+std <- function(x) sd(x)/sqrt(length(x))
+std(Temperature14$`Food intake per weight (g)`)
+std(Temperature28$`Food intake per weight (g)`)
+```
+
+```{r, echo=FALSE}
+df <- data.frame(Type = c("Mean", "Standard Error"),
+                Temperature14 = c(0.009285, 0.0007188723),
+                Temperature28 = c(0.01064615, 0.001747024))
+kable(df, align = "c", caption = "Calculated values") %>%
+  kable_styling(latex_options = "HOLD_position")
+```
+
+2. Create a properly formatted figure in Excel of the mean (including standard error) food consumption of snails by weight under our two temperature treatments. Paste your figure below 
+
+```{r, echo=FALSE, fig.cap="The effect of temperature on lettuce consumption per weight (g) of the Giant African Land Snail (\\textit{Lissachatina fulica}) (n=15). Giant African Land Snails were fed for a 30 minute period under different temperature conditions on November 1st, 2024 at the University of Guelph.", fig.pos="H", fig.align="center", fig.width=5, fig.height=4}
+plot(`Food intake per weight (g)` ~ Temperature, 
+     xlab = "Temperature (°C)", 
+     ylab = "Lettuce consumption per weight (g)", 
+     data = snail_w)
+snail_r<-lm(`Food intake per weight (g)` ~ Temperature, data=snail_w)
+```
+3. Briefly describe the results of the class experiment. Remember to include the major trend and numerical evidence. (2 marks)
+
+```{r, echo=FALSE}
+summary(snail_r)
+```
+
+
+ The figure above represents the consumption of lettuce by the Giant African Land Snail (\textit{Lissachatina fulica}) according to the temperature conditions in its optimal temperature range (22 to 28°C). Two main temperatures, 14°C and 28°C were used by a heating pad and ice as the snail ate the lettuce over a 30 minute period. In tracking the lettuce consumption rate, there appears to be a single outlier in the data set at the 14°C temperature of ~0.007g. This outlier could be due to experimental error caused by putting the snail under stress by moving the container or if the snail took longer to acclimate, etc. Additionally, there appears to be a greater standard error at the 28°C temperature. This means that it is a less accurate representation of the population of these species at this temperature outside of this experiment, compared to the 14°C which the standard error was smaller, causing it to be a more accurate representation of this population under these conditions. This graph also shows that the range for higher temperature ranges is more vast, and that at 28°C, we see the highest lettuce consumption per weight value of ~0.019g, compared to at 14°C where the highest consumption per weight is ~0.012g. These findings shown in the graph support the prediction that the Giant African Land Snail consumes more food at higher temperatures compared to lower temperatures. 
+
+
+### Part C: Figure and Description of Predicted Results for your Invasive Focal Species (10 marks)
+
+1. Using your feedback from Assignment 3, re-state the prediction for your focal species.
+\newline  
+
+
+If house sparrows are more effective at occupying human-made nesting sites compared to the American tree sparrow, then areas with bigger hole nesting boxes will have a higher decline in tree sparrow population density than smaller hole nesting boxes.
+\newline
+2. 	Create a figure and figure caption based on your prediction for your focal species. Figures must be fully labelled and include appropriate legends if applicable. (8 marks)
+```{r, echo=FALSE}
+sparrow1 <- read_excel("C:/Users/95joo/Desktop/snail.xlsx", 
+    sheet = "Sheet1")
+sparrow <- sparrow1 %>%
+  mutate(
+    Species=factor(Species),
+    Treatment=factor(Treatment)
+  )
+House<- subset(sparrow, Species == "House Sparrow")
+Tree<- subset(sparrow, Species == "Tree Sparrow")
+rownames(House) <- NULL
+rownames(House) <- NULL
+```
+
+```{r, echo=FALSE, fig.cap="Sparrow population proportion change in 100m squared area with different opening size nesting boxes during 2 years of study. Various locations in southern Ontario.", fig.pos="H", fig.align="center", fig.width=5, fig.height=4}
+stats <- sparrow %>%
+  group_by(Treatment, Species) %>%
+  summarize(
+    mean = mean(Proportion),
+    se = sd(Proportion) / sqrt(n()),
+    .groups = 'drop'
+  )
+ggplot(sparrow, aes(x = Treatment, y = Proportion, fill = Species))+
+  geom_boxplot()
+```
+```{r, echo=FALSE}
+kable(stats, align = "c", caption = "Summary of Sparrow boxplot data") %>%
+  kable_styling(latex_options = "HOLD_position")
+```
+3. Describe the major trend in your prediction figure that you would want a reader to take away from it. (2 marks)
+\newline
+  
+
+ The graph above depicts the relationship between the size of the nesting box opening and the density of the House sparrow and the American tree sparrow. The graph shows that there is a difference in both sparrow density between different opening size boxes, compared to a control where there were no nesting boxes at the sites. The major trend the reader should take away from this data is a decrease in American tree sparrow density of the area with bigger opening nesting box and an increase in the House sparrow density with bigger openings of the nesting box which supports our prediction. As depicted in the graph, when there is a smaller opening in the nesting boxes, the density of the House sparrow is , and the Tree sparrow has a density of ~2100. As we increase the size of this hole, we see that the House sparrow density remains large at ~ 3200 and the American tree sparrow density decreases to ~1700. 
